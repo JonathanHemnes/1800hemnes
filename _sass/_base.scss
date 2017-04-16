@@ -1,42 +1,81 @@
 @import "mixins";
 @import "variables";
 
+h1,
+h2,
+h3 {
+    color: $primary-text-color;
+    text-align: center;
+}
+
 .business-card {
-    background: black;
-    height: 100vh;
+
     width: 100vw;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-content: center;
-    align-items: center;
-    justify-content: center;
-    h1,
-    h2,
-    h3 {
-        color: $text-primary-color;
-    }
     background: $default-primary-color;
-    .logo-space {
-        
-        .circle {
-            @include fadeIn( 1s);
+    
+    .title {
+        text-align: center;
+        width: 100vw;
+
+        h1 {
+            margin-bottom: 100px;
+            margin-top: 150px;
+        }
+    }
+    .icon-container {
+        padding-top: 100px;
+        padding-bottom: 100px;
+        width: 250px;
+        display: block;
+        margin: auto;
+    
+        .icons {
+            
             display: flex;
+            flex-direction: row;
             align-content: center;
             align-items: center;
             justify-content: center;
-            margin: auto;
-            margin-top: 10vh;
-            border-radius: 50%;
-            background-color: $accent-color;
-            height: 75px;
-            width: 75px;
-            i {
-                color: $text-primary-color;
-            }
-             :hover {
-                color: darken($text-primary-color, 5%);
+
+            .circle {
+                @include fadeIn( 1s);
+                display: flex;
+                align-content: center;
+                align-items: center;
+                justify-content: center;
+                margin: auto;
+                border-radius: 50%;
+                background-color: $accent-color;
+                height: 75px;
+                width: 75px;
+                i {
+                    color: $text-primary-color;
+                }
+                :hover {
+                    color: darken($text-primary-color, 5%);
+                }
             }
         }
     }
+}
+.technologies {
+    margin-top: 100px;
+
+    .tech-icon-container {
+        margin-top: 50px;
+        margin-left: 20%;
+        margin-right: 20%;
+        display: block;
+        
+        .tech-icons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            i {
+                margin: 15px;
+                font-size: 46px;
+            }
+        }
+    }   
 }
