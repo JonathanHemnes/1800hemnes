@@ -62,7 +62,9 @@ h3 {
     }
 }
 .technologies {
-    margin-top: 100px;
+    padding-top: 100px;
+    @include angle('before', false, 3deg);
+    background: white;
 
     .tech-icon-container {
         margin-top: 50px;
