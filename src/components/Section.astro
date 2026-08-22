@@ -1,0 +1,55 @@
+---
+const { ext, id, title } = Astro.props;
+---
+
+<section class="section" id={id}>
+  <div class="shell section__inner">
+    <div class="section__marker">
+      <span class="tag">ext {ext}</span>
+      <h2 class="section__title">{title}</h2>
+    </div>
+    <div class="section__body">
+      <slot />
+    </div>
+  </div>
+</section>
+
+<style>
+  .section {
+    border-top: var(--rule);
+    padding-block: clamp(3rem, 7vw, 5rem);
+  }
+
+  .section__inner {
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .section__marker {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .section__title {
+    font-size: var(--step-2);
+    font-variation-settings: 'wdth' 108;
+    font-weight: 700;
+  }
+
+  /* Two columns once there is room for the marker to sit in the margin. */
+  @media (min-width: 56rem) {
+    .section__inner {
+      grid-template-columns: 14rem 1fr;
+      gap: 3rem;
+    }
+
+    .section__marker {
+      flex-direction: column;
+      gap: 0.75rem;
+      position: sticky;
+      top: 5rem;
+      align-self: start;
+    }
+  }
+</style>

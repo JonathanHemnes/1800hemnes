@@ -1,0 +1,341 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Rail from '../components/Rail.astro';
+import Hero from '../components/Hero.astro';
+import Section from '../components/Section.astro';
+import { meta, principles, work, depth, background, contact } from '../data/site';
+
+const year = new Date().getFullYear();
+---
+
+<Layout>
+  <Rail />
+
+  <main id="main">
+    <Hero />
+
+    <Section ext={principles.ext} id={principles.id} title={principles.title}>
+      <ul class="principles">
+        {
+          principles.items.map((item) => (
+            <li class="principle">
+              <h3 class="principle__name">{item.name}</h3>
+              <p class="principle__body">{item.body}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </Section>
+
+    <Section ext={work.ext} id={work.id} title={work.title}>
+      <ol class="roles">
+        {
+          work.items.map((item) => (
+            <li class="role">
+              <div class="role__head leader">
+                <h3 class="role__title">
+                  {item.role} <span class="role__org">{item.org}</span>
+                </h3>
+                <span class="leader__fill" aria-hidden="true" />
+                <span class="tag role__period">{item.period}</span>
+              </div>
+              <p class="role__body">{item.body}</p>
+              <ul class="outcomes">
+                {item.outcomes.map((outcome) => (
+                  <li class="outcome">{outcome}</li>
+                ))}
+              </ul>
+            </li>
+          ))
+        }
+      </ol>
+    </Section>
+
+    <Section ext={depth.ext} id={depth.id} title={depth.title}>
+      <dl class="depth">
+        {
+          depth.groups.map((group) => (
+            <div class="depth__group">
+              <dt class="depth__name">{group.name}</dt>
+              <dd class="depth__keywords">{group.keywords.join(' · ')}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </Section>
+
+    <Section ext={background.ext} id={background.id} title={background.title}>
+      <dl class="facts">
+        {
+          background.rows.map((row) => (
+            <div class="fact leader">
+              <dt class="tag fact__label">{row.label}</dt>
+              <span class="leader__fill" aria-hidden="true" />
+              <dd class="fact__value">{row.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </Section>
+
+    <Section ext={contact.ext} id={contact.id} title={contact.title}>
+      <p class="invitation">{contact.invitation}</p>
+      <ul class="lines">
+        {
+          contact.lines.map((line) => (
+            <li>
+              <a class="line leader" href={line.href}>
+                <span class="tag line__label">{line.label}</span>
+                <span class="leader__fill" aria-hidden="true" />
+                <span class="line__value">{line.value}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </Section>
+  </main>
+
+  <footer class="foot">
+    <div class="shell foot__inner">
+      <span class="tag">© {year} {meta.name}</span>
+      <span class="tag">Denver · always answering</span>
+    </div>
+  </footer>
+</Layout>
+
+<style>
+  ul,
+  ol,
+  dl {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  /* ── ext 01 · principles ───────────────────────────────────────────── */
+
+  .principles {
+    display: grid;
+    gap: clamp(1.75rem, 3vw, 2.5rem);
+  }
+
+  @media (min-width: 44rem) {
+    .principles {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: 3rem;
+    }
+  }
+
+  .principle__name {
+    font-size: var(--step-1);
+    font-variation-settings: 'wdth' 100;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .principle__body {
+    color: color-mix(in srgb, var(--bone) 82%, transparent);
+  }
+
+  /* ── ext 02 · roles ────────────────────────────────────────────────── */
+
+  .roles {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+  }
+
+  .role__head {
+    margin-bottom: 0.85rem;
+  }
+
+  .role__title {
+    font-size: var(--step-1);
+    font-variation-settings: 'wdth' 100;
+    font-weight: 600;
+  }
+
+  .role__org {
+    color: var(--second);
+  }
+
+  .role__period {
+    white-space: nowrap;
+  }
+
+  .role__body {
+    color: color-mix(in srgb, var(--bone) 82%, transparent);
+  }
+
+  .outcomes {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+    max-width: var(--measure);
+  }
+
+  .outcome {
+    position: relative;
+    padding-left: 1.5rem;
+    font-family: var(--data);
+    font-size: var(--step--1);
+    line-height: 1.7;
+    color: color-mix(in srgb, var(--bone) 78%, transparent);
+  }
+
+  /* Patch-cable tick, not a bullet. */
+  .outcome::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 0.75rem;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  /* On narrow screens the period drops under the title. */
+  @media (max-width: 34rem) {
+    .role__head {
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .role__head .leader__fill {
+      display: none;
+    }
+
+    .role__title {
+      width: 100%;
+    }
+  }
+
+  /* ── ext 03 · depth ────────────────────────────────────────────────
+     No rules and no leaders here — the list either side of it is ruled,
+     so this section reads as its own kind of thing.                     */
+
+  .depth {
+    display: grid;
+    gap: clamp(1.4rem, 3vw, 1.9rem);
+    max-width: 46rem;
+  }
+
+  .depth__name {
+    font-family: var(--display);
+    font-size: var(--step-1);
+    font-variation-settings: 'wdth' 100;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .depth__keywords {
+    font-family: var(--data);
+    font-size: var(--step--1);
+    line-height: 1.75;
+    color: var(--muted);
+  }
+
+  /* ── ext 04 · background ───────────────────────────────────────────── */
+
+  .facts {
+    display: grid;
+    gap: 0.2rem;
+    max-width: 42rem;
+  }
+
+  .fact {
+    padding-block: 0.7rem;
+    border-bottom: var(--rule);
+  }
+
+  .fact:first-child {
+    border-top: var(--rule);
+  }
+
+  .fact__label {
+    white-space: nowrap;
+  }
+
+  .fact__value {
+    text-align: right;
+  }
+
+  /* ── ext 05 · contact ──────────────────────────────────────────────── */
+
+  .invitation {
+    font-size: var(--step-1);
+    margin-bottom: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .lines {
+    display: grid;
+    gap: 0.2rem;
+    max-width: 42rem;
+  }
+
+  .line {
+    padding-block: 0.85rem;
+    border-bottom: var(--rule);
+    text-decoration: none;
+  }
+
+  .lines li:first-child .line {
+    border-top: var(--rule);
+  }
+
+  .line__value {
+    font-family: var(--display);
+    font-size: var(--step-1);
+    font-variation-settings: 'wdth' 104;
+    transition: color 160ms ease;
+  }
+
+  .line:hover .line__value,
+  .line:focus-visible .line__value {
+    color: var(--accent);
+  }
+
+  /* ── foot ──────────────────────────────────────────────────────────── */
+
+  .foot {
+    border-top: var(--rule);
+    padding-block: 2rem 2.5rem;
+  }
+
+  .foot__inner {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── narrow screens ────────────────────────────────────────────────
+     Leader rows need two lines once the value stops fitting beside its
+     label. The dots only make sense on a single line, so they go.      */
+  @media (max-width: 34rem) {
+    .fact,
+    .line {
+      flex-wrap: wrap;
+      gap: 0.2rem;
+    }
+
+    .fact .leader__fill,
+    .line .leader__fill {
+      display: none;
+    }
+
+    .fact__label,
+    .line__label {
+      width: 100%;
+    }
+
+    .fact__value,
+    .line__value {
+      text-align: left;
+    }
+  }
+</style>
