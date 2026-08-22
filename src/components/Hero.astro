@@ -1,0 +1,108 @@
+---
+import { hero, sections } from '../data/site';
+---
+
+<section class="hero shell">
+  <p class="tag hero__eyebrow rise">{hero.eyebrow}</p>
+
+  <h1 class="hero__lockup">
+    <span class="hero__prefix rise" style="--delay: 90ms">{hero.lockup.prefix}</span>
+    <span class="hero__name rise" style="--delay: 190ms">{hero.lockup.name}</span>
+  </h1>
+
+  <div class="hero__lede rise" style="--delay: 320ms">
+    {hero.lede.map((line) => <p>{line}</p>)}
+  </div>
+
+  <nav class="hero__directory rise" style="--delay: 420ms" aria-label="Sections">
+    {
+      sections.map((section) => (
+        <a class="hero__ext leader" href={`#${section.id}`}>
+          <span class="hero__ext-name">{section.short}</span>
+          <span class="leader__fill" aria-hidden="true" />
+          <span class="tag hero__ext-number">ext {section.ext}</span>
+        </a>
+      ))
+    }
+  </nav>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 7vw, 5.5rem);
+  }
+
+  .hero__eyebrow {
+    color: var(--accent);
+    margin: 0 0 clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  /* The lockup: panel lettering, wide and stamped. */
+  .hero__lockup {
+    display: flex;
+    flex-direction: column;
+    font-size: clamp(3.4rem, 15.5vw, 11rem);
+    font-weight: 800;
+    font-variation-settings: 'wdth' 112;
+    line-height: 0.84;
+    letter-spacing: -0.015em;
+    margin: 0;
+  }
+
+  .hero__prefix {
+    color: transparent;
+    /* Relative stroke so the outline holds up at every size. */
+    -webkit-text-stroke: 0.019em var(--stroke);
+    font-variation-settings: 'wdth' 94;
+    font-size: 0.9em;
+    letter-spacing: 0.005em;
+  }
+
+  .hero__name {
+    color: var(--bone);
+  }
+
+  .hero__lede {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(2rem, 5vw, 3rem);
+    font-size: var(--step-1);
+    color: color-mix(in srgb, var(--bone) 86%, transparent);
+  }
+
+  .hero__lede :global(p:first-child) {
+    color: var(--bone);
+  }
+
+  .hero__directory {
+    display: grid;
+    gap: 0.1rem;
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    max-width: 34rem;
+  }
+
+  .hero__ext {
+    padding-block: 0.7rem;
+    text-decoration: none;
+    border-bottom: var(--rule);
+  }
+
+  .hero__ext:first-child {
+    border-top: var(--rule);
+  }
+
+  .hero__ext-name {
+    font-family: var(--display);
+    font-size: var(--step-0);
+    font-variation-settings: 'wdth' 104;
+  }
+
+  .hero__ext:hover .hero__ext-number,
+  .hero__ext:focus-visible .hero__ext-number {
+    color: var(--accent);
+  }
+
+  .hero__ext-number {
+    transition: color 160ms ease;
+  }
+</style>

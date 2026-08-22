@@ -1,0 +1,86 @@
+---
+import { meta, hero } from '../data/site';
+---
+
+<header class="rail">
+  <div class="shell rail__inner">
+    <span class="tag rail__id">{meta.wordmark}</span>
+    <span class="tag rail__place">{meta.location}</span>
+    <span class="tag rail__status">
+      <span class="rail__lamp" aria-hidden="true"></span>
+      {hero.status}
+    </span>
+  </div>
+</header>
+
+<style>
+  .rail {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: color-mix(in srgb, var(--ink) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: var(--rule);
+  }
+
+  .rail__inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    height: 3rem;
+  }
+
+  .rail__id {
+    color: var(--bone);
+  }
+
+  .rail__place {
+    flex: 1;
+  }
+
+  .rail__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--second);
+    white-space: nowrap;
+  }
+
+  .rail__lamp {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--second);
+    animation: lamp 2.6s ease-in-out infinite;
+  }
+
+  @keyframes lamp {
+    0%,
+    100% {
+      opacity: 0.35;
+      box-shadow: 0 0 0 0 rgba(201, 199, 194, 0);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 0 0 0 4px rgba(201, 199, 194, 0.14);
+    }
+  }
+
+  /* The location is the first thing to go when the rail gets tight; the
+     name goes next, since the hero repeats it two lines down. */
+  @media (max-width: 34rem) {
+    .rail__place {
+      display: none;
+    }
+
+    .rail__id {
+      flex: 1;
+    }
+  }
+
+  @media (max-width: 23rem) {
+    .rail__id {
+      display: none;
+    }
+  }
+</style>

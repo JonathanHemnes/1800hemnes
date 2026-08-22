@@ -1,0 +1,174 @@
+/* ── Tokens ─────────────────────────────────────────────────────────────
+   Graphite: a near-neutral charcoal ground with one cool accent. Color is
+   deliberately quiet here — the structure and the writing carry the page.
+   The site commits to one look on purpose — no light variant.            */
+
+:root {
+  --ink: #161719;
+  --ink-raised: #1e2023;
+  --ink-line: #2e3135;
+  --bone: #e6e5e3;
+  --muted: #8c8b88;
+  --accent: #8fa8c8;
+  --dot: #43474c;
+  /* Second neutral: org names and the line lamp. */
+  --second: #c9c7c2;
+  /* Dim enough that the outlined name reads as recessed, not as a second voice. */
+  --stroke: #4a4e54;
+
+  --display: 'Archivo', system-ui, sans-serif;
+  --prose: 'Newsreader', Georgia, serif;
+  --data: 'DM Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* Type scale — 1.333 from a 17px body, clamped for small screens. */
+  --step--1: 0.812rem;
+  --step-0: 1.0625rem;
+  --step-1: clamp(1.25rem, 0.9rem + 1.1vw, 1.42rem);
+  --step-2: clamp(1.6rem, 1.1rem + 2vw, 2.1rem);
+  --step-3: clamp(2.1rem, 1.2rem + 3.6vw, 3.1rem);
+
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --measure: 62ch;
+  --rule: 1px solid var(--ink-line);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Anchor targets clear the sticky rail. */
+  scroll-padding-top: 4.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--bone);
+  font-family: var(--prose);
+  font-size: var(--step-0);
+  font-optical-sizing: auto;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--ink-line);
+  text-underline-offset: 0.28em;
+  text-decoration-thickness: 1px;
+  transition: color 160ms ease, text-decoration-color 160ms ease;
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  line-height: 1.08;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  max-width: var(--measure);
+  text-wrap: pretty;
+}
+
+/* ── Shared utilities ──────────────────────────────────────────────────── */
+
+.shell {
+  width: 100%;
+  max-width: 68rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* Mono label used for extensions, eyebrows, and field names. */
+.tag {
+  font-family: var(--data);
+  font-size: var(--step--1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Phone-book leader: label ....................... value */
+.leader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Real phone-book dots. A 1px dotted border renders as a hairline at this
+   scale, which loses the whole reference. */
+.leader__fill {
+  flex: 1;
+  min-width: 1.5rem;
+  height: 2px;
+  transform: translateY(-0.3em);
+  background-image: radial-gradient(circle at center, var(--dot) 1px, transparent 1.3px);
+  background-size: 8px 2px;
+  background-repeat: repeat-x;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  color: var(--ink);
+  font-family: var(--data);
+}
+
+/* ── Load sequence ─────────────────────────────────────────────────────── */
+
+.rise {
+  animation: rise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.9rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
