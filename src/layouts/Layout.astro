@@ -2,7 +2,7 @@
 import { meta } from '../data/site';
 import '../styles/global.css';
 
-const { title = `${meta.name} — ${meta.role}` } = Astro.props;
+const { title = `${meta.name} — ${meta.role}`, description = meta.description } = Astro.props;
 ---
 
 <!doctype html>
@@ -11,14 +11,14 @@ const { title = `${meta.name} — ${meta.role}` } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <meta name="description" content={meta.description} />
+    <meta name="description" content={description} />
     <meta name="author" content={meta.name} />
     <link rel="canonical" href={meta.url} />
     <meta name="theme-color" content="#161719" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
-    <meta property="og:description" content={meta.description} />
+    <meta property="og:description" content={description} />
     <meta property="og:url" content={meta.url} />
     <meta name="twitter:card" content="summary" />
 

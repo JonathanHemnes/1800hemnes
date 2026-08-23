@@ -1,0 +1,97 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Rail from '../../components/Rail.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const dateFormat = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Layout title={post.data.title} description={post.data.description}>
+  <Rail />
+
+  <main id="main">
+    <article class="post">
+      <div class="shell post__inner">
+        <a class="tag post__back" href="/blog">← Journal</a>
+        <h1 class="post__title">{post.data.title}</h1>
+        <p class="tag post__date">{dateFormat.format(post.data.date)}</p>
+        <div class="prose">
+          <Content />
+        </div>
+      </div>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  .post {
+    padding-block: clamp(3rem, 7vw, 5rem);
+  }
+
+  .post__inner {
+    display: grid;
+    gap: 1.25rem;
+    max-width: var(--measure);
+  }
+
+  .post__back {
+    text-decoration: none;
+  }
+
+  .post__title {
+    font-size: var(--step-3);
+    font-variation-settings: 'wdth' 108;
+  }
+
+  .post__date {
+    margin-top: -0.5rem;
+  }
+
+  .prose {
+    margin-top: 1rem;
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .prose :global(h2) {
+    font-size: var(--step-1);
+    font-variation-settings: 'wdth' 100;
+    margin-top: 0.5rem;
+  }
+
+  .prose :global(p) {
+    max-width: none;
+  }
+
+  .prose :global(a) {
+    color: var(--accent);
+    text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .prose :global(ul),
+  .prose :global(ol) {
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .prose :global(li) {
+    padding-left: 0;
+  }
+
+  .prose :global(li > ul),
+  .prose :global(li > ol) {
+    margin-top: 0.5rem;
+  }
+</style>

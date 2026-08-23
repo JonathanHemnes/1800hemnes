@@ -1,0 +1,131 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import Rail from '../../components/Rail.astro';
+import { meta } from '../../data/site';
+
+const posts = (await getCollection('blog')).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const dateFormat = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<Layout title={`Journal — ${meta.name}`} description="Notes on engineering leadership, from Jonathan Hemnes.">
+  <Rail />
+
+  <main id="main">
+    <section class="section">
+      <div class="shell section__inner">
+        <div class="section__marker">
+          <span class="tag">journal</span>
+          <h1 class="section__title">Journal</h1>
+        </div>
+        <div class="section__body">
+          <ul class="posts">
+            {
+              posts.map((post) => (
+                <li>
+                  <a class="post leader" href={`/blog/${post.id}`}>
+                    <span class="post__title">{post.data.title}</span>
+                    <span class="leader__fill" aria-hidden="true" />
+                    <span class="tag post__date">{dateFormat.format(post.data.date)}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .section {
+    padding-block: clamp(3rem, 7vw, 5rem);
+  }
+
+  .section__inner {
+    display: grid;
+    gap: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .section__marker {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+  }
+
+  .section__title {
+    font-size: var(--step-2);
+    font-variation-settings: 'wdth' 108;
+    font-weight: 700;
+  }
+
+  @media (min-width: 56rem) {
+    .section__inner {
+      grid-template-columns: 14rem 1fr;
+      gap: 3rem;
+    }
+
+    .section__marker {
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  }
+
+  .posts {
+    display: grid;
+    gap: 0.2rem;
+    max-width: 42rem;
+  }
+
+  .post {
+    padding-block: 0.85rem;
+    border-bottom: var(--rule);
+    text-decoration: none;
+  }
+
+  .posts li:first-child .post {
+    border-top: var(--rule);
+  }
+
+  .post__title {
+    font-family: var(--display);
+    font-size: var(--step-1);
+    font-variation-settings: 'wdth' 100;
+    font-weight: 600;
+    transition: color 160ms ease;
+  }
+
+  .post:hover .post__title,
+  .post:focus-visible .post__title {
+    color: var(--accent);
+  }
+
+  .post__date {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 34rem) {
+    .post {
+      flex-wrap: wrap;
+      gap: 0.2rem;
+    }
+
+    .post .leader__fill {
+      display: none;
+    }
+
+    .post__title {
+      width: 100%;
+    }
+  }
+</style>

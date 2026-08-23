@@ -6,6 +6,7 @@ import { meta, hero } from '../data/site';
   <div class="shell rail__inner">
     <span class="tag rail__id">{meta.wordmark}</span>
     <span class="tag rail__place">{meta.location}</span>
+    <a class="tag rail__link" href="/blog">Journal</a>
     <span class="tag rail__status">
       <span class="rail__lamp" aria-hidden="true"></span>
       {hero.status}
@@ -36,6 +37,11 @@ import { meta, hero } from '../data/site';
 
   .rail__place {
     flex: 1;
+  }
+
+  .rail__link {
+    text-decoration: none;
+    white-space: nowrap;
   }
 
   .rail__status {
