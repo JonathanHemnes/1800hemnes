@@ -57,6 +57,7 @@ import Rail from '../components/Rail.astro';
             <a href="#/explore" data-tab="explore">Explore</a>
             <a href="#/ancestors" data-tab="ancestors">Ancestors</a>
             <a href="#/lines" data-tab="lines">Lines</a>
+            <a href="#/map" data-tab="map">Map</a>
           </nav>
           <div class="fam__search" role="search">
             <label class="vh" for="fam-q">Find a person or place</label>
@@ -209,6 +210,8 @@ import Rail from '../components/Rail.astro';
 
   .fam__lock {
     display: grid;
+    /* minmax lets the passphrase field shrink below its natural width on small phones. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 0.75rem;
     max-width: 30rem;
     padding-bottom: 4rem;
@@ -310,6 +313,19 @@ import Rail from '../components/Rail.astro';
     padding: 1rem 0.6rem 0.9rem;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
+  }
+
+  /* Four tabs fit a phone once the spacing tightens; on anything narrower they wrap. */
+  @media (max-width: 30rem) {
+    .fam__tabs {
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .fam__tabs a {
+      padding-inline: 0.5rem;
+      letter-spacing: 0.1em;
+    }
   }
 
   .fam__tabs a:hover {
@@ -462,6 +478,141 @@ import Rail from '../components/Rail.astro';
 
   .fam [data-focus-target]:focus {
     outline: none;
+  }
+
+  /* ── Map ─────────────────────────────────────────────────────────────── */
+
+  .map {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .map__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .fam button.chip {
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .fam .chip[aria-pressed='true'] {
+    border-color: var(--accent);
+    color: var(--bone);
+  }
+
+  .map__body {
+    display: grid;
+    gap: 1.75rem;
+  }
+
+  @media (min-width: 60rem) {
+    .map__body {
+      grid-template-columns: minmax(0, 1fr) 22rem;
+      align-items: start;
+    }
+
+    .map__panel {
+      max-height: min(38rem, 70vh);
+      overflow: auto;
+      scrollbar-color: var(--ink-line) transparent;
+      padding-right: 0.25rem;
+    }
+  }
+
+  .map__canvas {
+    height: min(38rem, 62vh);
+    border: var(--rule);
+    border-radius: 4px;
+    /* Keeps the map's controls under the sticky toolbar. */
+    isolation: isolate;
+  }
+
+  .map__panel {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
+
+  .map__title {
+    font-family: var(--display);
+    font-size: var(--step-1);
+    font-weight: 650;
+    line-height: 1.2;
+  }
+
+  .map__lede {
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .map__back {
+    justify-self: start;
+    text-decoration: none;
+  }
+
+  .map__back::before {
+    content: '← ';
+  }
+
+  .fam .map__list .lineitem {
+    padding-block: 0.55rem;
+  }
+
+  .fam .maplibregl-ctrl-group {
+    background: var(--ink-raised);
+    border: 1px solid var(--ink-line);
+    box-shadow: none;
+  }
+
+  .fam .maplibregl-ctrl-group button + button {
+    border-top-color: var(--ink-line);
+  }
+
+  .fam .maplibregl-ctrl-group button:hover {
+    background-color: var(--ink-line);
+  }
+
+  /* The +/− icons are dark SVGs; flip them for the dark buttons. */
+  .fam .maplibregl-ctrl-icon {
+    filter: invert(1) brightness(0.9);
+  }
+
+  .fam .maplibregl-ctrl.maplibregl-ctrl-attrib {
+    background: rgb(22 23 25 / 0.85);
+    color: var(--muted);
+    font-size: 0.65rem;
+  }
+
+  .fam .maplibregl-ctrl-attrib a {
+    color: var(--second);
+  }
+
+  .fam .maplibregl-ctrl-attrib-button {
+    filter: invert(1);
+  }
+
+  .fam .maplibregl-cooperative-gesture-screen {
+    font-family: var(--data);
+    font-size: 0.85rem;
+  }
+
+  .fam .map__tip .maplibregl-popup-content {
+    padding: 0.35rem 0.6rem;
+    background: var(--ink-raised);
+    color: var(--bone);
+    border: 1px solid var(--ink-line);
+    border-radius: 3px;
+    box-shadow: none;
+    font-family: var(--data);
+    font-size: 0.72rem;
+  }
+
+  .fam .map__tip .maplibregl-popup-tip {
+    border-top-color: var(--ink-line);
+    border-bottom-color: var(--ink-line);
   }
 
   /* ── Shared pieces ───────────────────────────────────────────────────── */

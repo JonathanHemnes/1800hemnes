@@ -40,6 +40,30 @@ export interface Line {
   origin: string;
 }
 
+export interface Place {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+/** A gazetteer entry: a place, and the text in the records that means it. */
+export interface PlaceEntry extends Place {
+  /** Any of these appearing in a record's place text puts that record here. */
+  match: string[];
+  /** A place inside another (a cemetery in a city): when both match, only this one counts. */
+  within?: string;
+}
+
+export type PinKind = 'born' | 'lived' | 'married' | 'died' | 'buried';
+
+/** People tied to a place in one way: born there, buried there, and so on. */
+export interface Pin {
+  place: string;
+  kind: PinKind;
+  people: string[];
+}
+
 export interface FamilyData {
   /** One sentence under the page title. */
   intro: string;
@@ -47,6 +71,9 @@ export interface FamilyData {
   lines: Line[];
   people: Person[];
   unions: Union[];
+  /** Filled in when sealing, from private/places.ts. */
+  places: Place[];
+  pins: Pin[];
 }
 
 /** The encrypted file committed to the repository. */

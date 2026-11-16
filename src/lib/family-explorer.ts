@@ -1,16 +1,18 @@
 /**
  * Client side of the unlisted family page: indexes the records, works out
- * how any two people are related, and draws the three views (Explore,
- * Ancestors, Lines) into the page. State lives in the URL hash so the back
- * button and shared links work: #/explore/<id>, #/ancestors/<id>, #/lines/<id>.
+ * how any two people are related, and draws the four views (Explore,
+ * Ancestors, Lines, Map) into the page. State lives in the URL hash so the
+ * back button and shared links work: #/explore/<id>, #/ancestors/<id>,
+ * #/lines/<id>, #/map/<place>.
  *
  * Nobody is the center by default. A visitor can say who they are, which is
  * remembered in their own browser only; until then no relationships are shown.
  */
-import { family, type Line, type Person, type Union } from './family-data';
+import { family, type Line, type Person, type Pin, type PinKind, type Union } from './family-data';
+import type { FamilyMap, MapDot } from './family-map';
 
 /* Imported only after the page unlocks the records; see family-lock.ts. */
-const { lines, people, unions } = family();
+const { lines, people, unions, places, pins } = family();
 
 /* ── Index ───────────────────────────────────────────────────────────── */
 
@@ -121,6 +123,20 @@ const meetingPoint =
   people
     .filter((person) => descendedFrom.every((set) => set.has(person.id)))
     .sort((a, b) => (yearOf(a.born) ?? 9999) - (yearOf(b.born) ?? 9999))[0]?.id ?? lines[0].root;
+
+/* ── Places ──────────────────────────────────────────────────────────── */
+
+const placeById = new Map(places.map((place) => [place.id, place]));
+
+/** Where each person's own facts put them: person → kind → place ids. */
+const placesOf = new Map<string, Map<PinKind, string[]>>();
+for (const pin of pins) {
+  for (const id of pin.people) {
+    const kinds = placesOf.get(id) ?? new Map<PinKind, string[]>();
+    kinds.set(pin.kind, [...(kinds.get(pin.kind) ?? []), pin.place]);
+    placesOf.set(id, kinds);
+  }
+}
 
 /* ── Relationships ───────────────────────────────────────────────────── */
 
@@ -383,23 +399,30 @@ function renderExplore(id: string) {
   const person = get(id);
   const rel = relation(id);
 
-  const facts: { label: string; main: string; sub?: string }[] = [];
+  const facts: { label: string; date?: string; place?: string }[] = [];
   const addFact = (label: string, date?: string, place?: string) => {
-    if (date || place) facts.push({ label, main: (date || place)!, sub: date ? place : undefined });
+    if (date || place) facts.push({ label, date, place });
   };
   addFact('Born', person.born, person.bornPlace);
   addFact('Died', person.died, person.diedPlace);
-  addFact('Buried', person.buried);
-  addFact('Lived', person.lived);
+  addFact('Buried', undefined, person.buried);
+  addFact('Lived', undefined, person.lived);
+
+  /* A place that's on the map links to it. */
+  const KIND: Record<string, PinKind> = { Born: 'born', Died: 'died', Buried: 'buried', Lived: 'lived' };
+  const placeHtml = (label: string, place: string) => {
+    const onMap = placesOf.get(id)?.get(KIND[label])?.[0];
+    return onMap ? `<a href="#/map/${onMap}">${esc(place)}</a>` : esc(place);
+  };
 
   const factList = facts.length
     ? `<dl class="facts">${facts
-        .map(
-          (fact) =>
-            `<div><dt class="tag">${fact.label}</dt><dd>${esc(fact.main)}${
-              fact.sub ? `<span class="facts__sub">${esc(fact.sub)}</span>` : ''
-            }</dd></div>`,
-        )
+        .map(({ label, date, place }) => {
+          const where = place ? placeHtml(label, place) : '';
+          return `<div><dt class="tag">${label}</dt><dd>${
+            date ? `${esc(date)}${where ? `<span class="facts__sub">${where}</span>` : ''}` : where
+          }</dd></div>`;
+        })
         .join('')}</dl>`
     : `<p class="muted">No dates or places recorded.</p>`;
 
@@ -639,6 +662,88 @@ function renderLines(lineId: string | null) {
   </section>`;
 }
 
+/* ── Map ─────────────────────────────────────────────────────────────── */
+
+let mapLine: string | null = null;
+let lastPlace: string | null = null;
+
+const KIND_ORDER: PinKind[] = ['born', 'lived', 'married', 'died', 'buried'];
+const KIND_LABEL: Record<PinKind, string> = {
+  born: 'Born here',
+  lived: 'Lived here',
+  married: 'Married here',
+  died: 'Died here',
+  buried: 'Buried here',
+};
+
+/** Pins narrowed to the chosen line's people (its descendants and the people they married). */
+function mapPins(): Pin[] {
+  if (!mapLine) return pins;
+  const inLine = (id: string) => !!linesOf.get(id)?.some((line) => line.id === mapLine);
+  return pins.flatMap((pin) => {
+    const people = pin.people.filter(inLine);
+    return people.length ? [{ ...pin, people }] : [];
+  });
+}
+
+function mapDots(): MapDot[] {
+  const counts = new Map<string, Set<string>>();
+  for (const pin of mapPins()) {
+    const set = counts.get(pin.place) ?? new Set<string>();
+    pin.people.forEach((id) => set.add(id));
+    counts.set(pin.place, set);
+  }
+  return [...counts].map(([id, set]) => ({ place: placeById.get(id)!, count: set.size }));
+}
+
+const peopleCount = (n: number) => `${n} ${n === 1 ? 'person' : 'people'}`;
+
+function renderMapPanel(placeId: string | null) {
+  const lineName = lines.find((line) => line.id === mapLine)?.name;
+
+  if (placeId) {
+    const here = mapPins().filter((pin) => pin.place === placeId);
+    const groups = KIND_ORDER.map((kind) => {
+      const pin = here.find((entry) => entry.kind === kind);
+      return pin ? group(KIND_LABEL[kind], cards(pin.people.map((id) => card(id)))) : '';
+    }).join('');
+    return `<a class="tag map__back" href="#/map">All places</a>
+      <h2 class="map__title" tabindex="-1" data-focus-target>${esc(placeById.get(placeId)!.name)}</h2>
+      ${groups || `<p class="muted">No one in the ${esc(lineName ?? '')} line is recorded here.</p>`}`;
+  }
+
+  const dots = mapDots().sort((a, b) => b.count - a.count || a.place.name.localeCompare(b.place.name));
+  return `<h2 class="map__title" tabindex="-1" data-focus-target>${dots.length} places</h2>
+    <p class="map__lede">Everywhere the records say someone${
+      lineName ? ` in the ${esc(lineName)} line` : ''
+    } was born, lived, married, died, or was buried. Pick a dot or a place.</p>
+    <ul class="lines map__list">${dots
+      .map(
+        ({ place, count }) => `<li>
+          <a class="lineitem leader" href="#/map/${place.id}">
+            <span class="lineitem__text"><span class="lineitem__name">${esc(place.name)}</span></span>
+            <span class="leader__fill" aria-hidden="true"></span>
+            <span class="tag lineitem__count">${peopleCount(count)}</span>
+          </a>
+        </li>`,
+      )
+      .join('')}</ul>`;
+}
+
+function renderMap(placeId: string | null) {
+  const chip = (id: string | null, label: string) =>
+    `<button type="button" class="chip" data-map-line="${id ?? ''}" aria-pressed="${mapLine === id}">${esc(label)}</button>`;
+  return `<div class="map">
+    <div class="map__filters" role="group" aria-label="Show one line">
+      ${chip(null, 'All lines')}${lines.map((line) => chip(line.id, line.name)).join('')}
+    </div>
+    <div class="map__body">
+      <div class="map__canvas" id="fam-map" role="region" aria-label="Map of family places"></div>
+      <div class="map__panel" data-map-panel>${renderMapPanel(placeId)}</div>
+    </div>
+  </div>`;
+}
+
 /* ── Search ──────────────────────────────────────────────────────────── */
 
 const fold = (text: string) =>
@@ -795,12 +900,14 @@ function saveMe(id: string | null) {
 type Route =
   | { view: 'explore'; id: string | null }
   | { view: 'ancestors'; id: string }
-  | { view: 'lines'; id: string | null };
+  | { view: 'lines'; id: string | null }
+  | { view: 'map'; id: string | null };
 
 function parseRoute(): Route {
-  const [, view, arg] = location.hash.match(/^#\/(explore|ancestors|lines)(?:\/([\w-]+))?/) ?? [];
+  const [, view, arg] = location.hash.match(/^#\/(explore|ancestors|lines|map)(?:\/([\w-]+))?/) ?? [];
   const person = arg && byId.has(arg) ? arg : null;
   if (view === 'lines') return { view, id: arg ?? lastLine };
+  if (view === 'map') return { view, id: arg && placeById.has(arg) ? arg : null };
   if (view === 'ancestors') return { view, id: person ?? me ?? meetingPoint };
   if (view === 'explore') return { view, id: person };
   return { view: 'explore', id: me };
@@ -818,24 +925,63 @@ export function mount(root: HTMLElement) {
 
   me = readMe();
   let lastPerson: string | null = me;
+  let mapView: FamilyMap | null = null;
+  let mapToken = 0;
+
+  /* The map library (about 280 KB) loads on first use; a route change while it loads cancels the draw. */
+  const openMap = async () => {
+    const token = ++mapToken;
+    const { createMap } = await import('./family-map');
+    const el = view.querySelector<HTMLElement>('#fam-map');
+    if (token !== mapToken || !el) return;
+    mapView = createMap(el, (id) => (location.hash = `#/map/${id}`));
+    mapView.show(mapDots(), true);
+    mapView.select(parseRoute().id);
+  };
 
   const render = (moveFocus: boolean) => {
     const route = parseRoute();
-    if (route.view !== 'lines' && route.id) lastPerson = route.id;
+    if ((route.view === 'explore' || route.view === 'ancestors') && route.id) lastPerson = route.id;
+    if (route.view === 'map') lastPlace = route.id;
 
-    view.innerHTML =
-      route.view === 'explore'
-        ? route.id
-          ? renderExplore(route.id)
-          : renderStart()
-        : route.view === 'ancestors'
-          ? renderAncestors(route.id)
-          : renderLines(route.id);
+    /* Arriving at a place the line filter hides (from someone's page, say): show all lines again. */
+    const unfilter =
+      route.view === 'map' && !!route.id && !!mapLine && !mapPins().some((pin) => pin.place === route.id);
+    if (unfilter) mapLine = null;
+
+    if (route.view === 'map' && mapView) {
+      /* Same map, new place: keep the map and its zoom, swap the side panel. */
+      if (unfilter) {
+        for (const chip of view.querySelectorAll<HTMLElement>('[data-map-line]')) {
+          chip.setAttribute('aria-pressed', String(!chip.dataset.mapLine));
+        }
+        mapView.show(mapDots(), false);
+      }
+      view.querySelector('[data-map-panel]')!.innerHTML = renderMapPanel(route.id);
+      mapView.select(route.id);
+    } else {
+      mapView?.destroy();
+      mapView = null;
+      mapToken++;
+      view.innerHTML =
+        route.view === 'explore'
+          ? route.id
+            ? renderExplore(route.id)
+            : renderStart()
+          : route.view === 'ancestors'
+            ? renderAncestors(route.id)
+            : route.view === 'lines'
+              ? renderLines(route.id)
+              : renderMap(route.id);
+      if (route.view === 'map') openMap();
+    }
 
     for (const tab of tabs) {
       const name = tab.dataset.tab;
       tab.href =
-        name === 'lines'
+        name === 'map'
+          ? `#/map${lastPlace ? `/${lastPlace}` : ''}`
+          : name === 'lines'
           ? `#/lines${lastLine ? `/${lastLine}` : ''}`
           : name === 'explore'
             ? `#/explore${lastPerson ? `/${lastPerson}` : ''}`
@@ -852,16 +998,21 @@ export function mount(root: HTMLElement) {
     }
 
     const heading =
-      route.view === 'lines'
-        ? lines.find((line) => line.id === lastLine)?.name
-        : route.id
-          ? get(route.id).name
-          : null;
+      route.view === 'map'
+        ? route.id
+          ? placeById.get(route.id)!.name
+          : 'Map'
+        : route.view === 'lines'
+          ? lines.find((line) => line.id === lastLine)?.name
+          : route.id
+            ? get(route.id).name
+            : null;
     document.title = heading ? `${heading} · ${baseTitle}` : baseTitle;
 
     if (moveFocus) {
       view.querySelector<HTMLElement>('[data-focus-target]')?.focus({ preventScroll: true });
-      if (view.getBoundingClientRect().top < 0) view.scrollIntoView({ block: 'start' });
+      /* On the map, picking a place shouldn't scroll the map away. */
+      if (route.view !== 'map' && view.getBoundingClientRect().top < 0) view.scrollIntoView({ block: 'start' });
     }
   };
 
@@ -878,9 +1029,19 @@ export function mount(root: HTMLElement) {
   };
 
   root.addEventListener('click', (event) => {
-    const el = (event.target as Element).closest<HTMLElement>('[data-me], [data-who-change], [data-toggle], [data-expand]');
+    const el = (event.target as Element).closest<HTMLElement>(
+      '[data-me], [data-who-change], [data-toggle], [data-expand], [data-map-line]',
+    );
     if (!el) return;
-    if (el.dataset.me) {
+    if (el.hasAttribute('data-map-line')) {
+      mapLine = el.dataset.mapLine || null;
+      for (const chip of view.querySelectorAll<HTMLElement>('[data-map-line]')) {
+        chip.setAttribute('aria-pressed', String((chip.dataset.mapLine || null) === mapLine));
+      }
+      view.querySelector('[data-map-panel]')!.innerHTML = renderMapPanel(parseRoute().id);
+      mapView?.show(mapDots(), true);
+      mapView?.select(parseRoute().id);
+    } else if (el.dataset.me) {
       setMe(el.dataset.me);
       view.querySelector<HTMLElement>('[data-focus-target]')?.focus({ preventScroll: true });
     } else if (el.hasAttribute('data-who-change')) {

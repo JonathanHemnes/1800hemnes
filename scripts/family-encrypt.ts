@@ -1,9 +1,10 @@
 /**
  * Seals the family records for the unlisted page.
  *
- * Reads the plain records from private/family.ts and the passphrase from
- * FAMILY_PASSPHRASE or private/passphrase.txt (both gitignored), checks the
- * records, and writes src/data/family.enc.json: AES-256-GCM with a key from
+ * Reads the plain records from private/family.ts, the map's places from
+ * private/places.ts, and the passphrase from FAMILY_PASSPHRASE or
+ * private/passphrase.txt (all gitignored), checks the records, puts each
+ * place they mention on the map, and writes src/data/family.enc.json: AES-256-GCM with a key from
  * PBKDF2-SHA-256. Only that file is committed. Run it after any edit:
  *
  *   npm run family:encrypt
@@ -14,8 +15,9 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { data, validate } from '../private/family.ts';
-import { normalizePassphrase, type Sealed } from '../src/lib/family-data.ts';
+import { data as records, validate } from '../private/family.ts';
+import { gazetteer, notOnMap } from '../private/places.ts';
+import { normalizePassphrase, type FamilyData, type Pin, type PinKind, type Sealed } from '../src/lib/family-data.ts';
 
 const OUT = new URL('../src/data/family.enc.json', import.meta.url);
 const PASS_FILE = new URL('../private/passphrase.txt', import.meta.url);
@@ -31,6 +33,55 @@ if (passphrase.length < 8) {
 }
 
 validate();
+
+/* ── Places ──────────────────────────────────────────────────────────── */
+
+const MONTH = /\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?/gi;
+const pins = new Map<string, Pin>();
+const missing = new Set<string>();
+
+/** Every gazetteer place a bit of record text names, most specific first. */
+function placesIn(text: string) {
+  const hits = gazetteer.filter((entry) => entry.match.some((needle) => text.includes(needle)));
+  return hits.filter((hit) => !hits.some((other) => other.within === hit.id));
+}
+
+function pin(text: string | undefined, kind: PinKind, people: string[]) {
+  if (!text) return;
+  const found = placesIn(text);
+  /* A bare date ("Aug 1, 1936") names no place; anything else unmatched gets reported. */
+  if (!found.length && !notOnMap.some((skip) => text.includes(skip)) && /[a-z]/i.test(text.replace(MONTH, ''))) missing.add(text);
+  for (const place of found) {
+    const key = `${place.id} ${kind}`;
+    const entry = pins.get(key) ?? { place: place.id, kind, people: [] };
+    for (const id of people) if (!entry.people.includes(id)) entry.people.push(id);
+    pins.set(key, entry);
+  }
+}
+
+for (const person of records.people) {
+  pin(person.bornPlace, 'born', [person.id]);
+  pin(person.lived, 'lived', [person.id]);
+  pin(person.diedPlace, 'died', [person.id]);
+  pin(person.buried, 'buried', [person.id]);
+}
+for (const union of records.unions) {
+  pin(union.married, 'married', union.partners);
+  pin(union.lived, 'lived', union.partners);
+}
+
+const used = new Set([...pins.values()].map((entry) => entry.place));
+const data: FamilyData = {
+  ...records,
+  places: gazetteer.filter((entry) => used.has(entry.id)).map(({ id, name, lat, lng }) => ({ id, name, lat, lng })),
+  pins: [...pins.values()],
+};
+
+if (missing.size) {
+  console.warn(
+    `Not on the map (add to private/places.ts, or to notOnMap there):\n${[...missing].map((text) => `  ${text}`).join('\n')}`,
+  );
+}
 
 const b64 = (bytes: Uint8Array) => Buffer.from(bytes).toString('base64');
 const unb64 = (text: string) => new Uint8Array(Buffer.from(text, 'base64'));
@@ -82,7 +133,7 @@ const out: Sealed = {
 };
 writeFileSync(OUT, `${JSON.stringify(out)}\n`);
 console.log(
-  `Sealed ${data.people.length} people into src/data/family.enc.json (${Math.round(out.data.length / 1024)} KB, ${
+  `Sealed ${data.people.length} people and ${data.places.length} places into src/data/family.enc.json (${Math.round(out.data.length / 1024)} KB, ${
     old ? 'same passphrase' : 'new passphrase: remembered browsers will be asked again'
   }).`,
 );
