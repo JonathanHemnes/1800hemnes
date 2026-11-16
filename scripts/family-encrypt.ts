@@ -25,8 +25,8 @@ const ITERATIONS = 600_000;
 const passphrase = normalizePassphrase(
   process.env.FAMILY_PASSPHRASE ?? (existsSync(PASS_FILE) ? readFileSync(PASS_FILE, 'utf8') : ''),
 );
-if (passphrase.length < 16) {
-  console.error('Set a passphrase of at least 16 characters in private/passphrase.txt or FAMILY_PASSPHRASE.');
+if (passphrase.length < 12) {
+  console.error('Set a passphrase of at least 12 characters in private/passphrase.txt or FAMILY_PASSPHRASE.');
   process.exit(1);
 }
 
