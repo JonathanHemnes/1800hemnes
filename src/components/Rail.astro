@@ -1,12 +1,23 @@
 ---
 import { meta, hero } from '../data/site';
+
+/* `plain` drops the personal bits (location, journal) for shared family pages. */
+const { plain = false } = Astro.props;
 ---
 
 <header class="rail">
   <div class="shell rail__inner">
-    <span class="tag rail__id">{meta.wordmark}</span>
-    <span class="tag rail__place">{meta.location}</span>
-    <a class="tag rail__link" href="/blog">Journal</a>
+    <span class:list={['tag rail__id', { 'rail__id--grow': plain }]}>{meta.wordmark}</span>
+    {
+      !plain && (
+        <>
+          <span class="tag rail__place">{meta.location}</span>
+          <a class="tag rail__link" href="/blog">
+            Journal
+          </a>
+        </>
+      )
+    }
     <span class="tag rail__status">
       <span class="rail__lamp" aria-hidden="true"></span>
       {hero.status}
@@ -35,7 +46,8 @@ import { meta, hero } from '../data/site';
     color: var(--bone);
   }
 
-  .rail__place {
+  .rail__place,
+  .rail__id--grow {
     flex: 1;
   }
 

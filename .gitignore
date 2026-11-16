@@ -3,3 +3,7 @@ dist/
 .astro/
 .DS_Store
 npm-debug.log*
+
+# Plaintext family records and the passphrase. Only the encrypted copy
+# (src/data/family.enc.json) is committed. See scripts/family-encrypt.ts.
+private/

@@ -2,7 +2,12 @@
 import { meta } from '../data/site';
 import '../styles/global.css';
 
-const { title = `${meta.name} — ${meta.role}`, description = meta.description } = Astro.props;
+const {
+  title = `${meta.name} — ${meta.role}`,
+  description = meta.description,
+  /* Unlisted pages: keep out of search engines and link previews. */
+  noindex = false,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -12,15 +17,25 @@ const { title = `${meta.name} — ${meta.role}`, description = meta.description 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="author" content={meta.name} />
-    <link rel="canonical" href={meta.url} />
+    {!noindex && <meta name="author" content={meta.name} />}
     <meta name="theme-color" content="#161719" />
-
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:url" content={meta.url} />
-    <meta name="twitter:card" content="summary" />
+    {
+      noindex ? (
+        <>
+          <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+          <meta name="referrer" content="no-referrer" />
+        </>
+      ) : (
+        <>
+          <link rel="canonical" href={meta.url} />
+          <meta property="og:type" content="website" />
+          <meta property="og:title" content={title} />
+          <meta property="og:description" content={description} />
+          <meta property="og:url" content={meta.url} />
+          <meta name="twitter:card" content="summary" />
+        </>
+      )
+    }
 
     <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon/favicon-16x16.png" />
