@@ -123,9 +123,22 @@ export async function unlock(root: HTMLElement) {
     location.reload();
   });
 
+  /*
+   * Browsers only offer Web Crypto on secure (https) pages. The host's
+   * trailing-slash redirect can land a visitor on plain http, so move them
+   * back to https before anything else. Dev stays put: localhost is already
+   * secure, and a phone on the LAN has no https to go to.
+   */
+  if (!window.isSecureContext && location.protocol === 'http:' && import.meta.env.PROD) {
+    location.replace(`https://${location.host}${location.pathname}${location.search}${location.hash}`);
+    return;
+  }
+
   if (!crypto.subtle || typeof DecompressionStream === 'undefined') {
     form.hidden = false;
-    error.textContent = 'This browser can’t open the records. Try a current version of Safari, Chrome, Firefox, or Edge.';
+    error.textContent = window.isSecureContext
+      ? 'This browser can’t open the records. Try a current version of Safari, Chrome, Firefox, or Edge.'
+      : 'The records only open over a secure connection. Load this page with https:// at the start of the address.';
     button.disabled = true;
     return;
   }
